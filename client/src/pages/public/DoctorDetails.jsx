@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { doctorService, appointmentService } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import StarRating from '../../components/StarRating';
@@ -10,13 +11,15 @@ import {
   MapPin,
   Building2,
   Award,
-  DollarSign,
   Globe,
   ShieldCheck,
   CheckCircle2,
   AlertCircle,
   MessageSquare,
-  ChevronRight
+  Sparkles,
+  ArrowRight,
+  User,
+  Heart
 } from 'lucide-react';
 
 export default function DoctorDetails() {
@@ -87,152 +90,166 @@ export default function DoctorDetails() {
     }
 
     if (user.role !== 'patient') {
-      setErrorMessage('Doctor or Admin accounts cannot book patient appointments. Please log in as a Patient.');
+      setErrorMessage('Only registered patients can book doctor appointments.');
       return;
     }
 
     if (!selectedTime) {
-      setErrorMessage('Please select an available time slot.');
+      setErrorMessage('Please select an available time slot for your appointment.');
       return;
     }
 
     try {
       setBookingLoading(true);
       const res = await appointmentService.createAppointment({
-        doctor_id: parseInt(id),
+        doctor_id: doctor.doctor_id,
         appointment_date: selectedDate,
         appointment_time: selectedTime,
-        reason: reason
+        reason: reason || 'General Specialist Consultation'
       });
 
       if (res.data.success) {
         setBookingSuccess(true);
-        // Refresh slots
-        const slotsRes = await appointmentService.getSlots(id, selectedDate);
-        if (slotsRes.data.success) setSlotsInfo(slotsRes.data);
       }
     } catch (err) {
-      setErrorMessage(err.response?.data?.message || 'Failed to book appointment.');
+      setErrorMessage(err.response?.data?.message || 'Failed to book appointment. Please try again.');
     } finally {
       setBookingLoading(false);
     }
   };
 
-  if (loading) return <LoadingSpinner message="Loading doctor profile & schedule..." />;
-  if (!doctor) return <div className="text-center py-20 font-bold text-slate-500">Doctor not found.</div>;
+  if (loading) return <LoadingSpinner message="Loading doctor profile & clinic availability..." />;
+  if (!doctor) return (
+    <div className="max-w-md mx-auto py-20 text-center space-y-4">
+      <h3 className="text-xl font-bold text-slate-900 dark:text-white">Doctor Profile Not Found</h3>
+      <button onClick={() => navigate('/find-doctors')} className="px-5 py-2.5 bg-emerald-600 text-white rounded-xl font-bold text-xs">
+        Return to Doctors List
+      </button>
+    </div>
+  );
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
       
-      {/* Top Banner / Doctor Summary Header */}
-      <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 md:p-8 border border-slate-200/80 dark:border-slate-700 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden">
-        
-        <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
-          <div className="relative">
-            <img
-              src={doctor.profile_image || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=400'}
-              alt={doctor.doctor_name}
-              onError={(e) => {
-                e.target.onerror = null;
-                e.target.src = 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=400';
-              }}
-              className="w-24 h-24 md:w-32 md:h-32 rounded-3xl object-cover ring-4 ring-sky-500/20 shadow-md"
-            />
-            <span className="absolute -bottom-2 -right-2 p-1 rounded-full bg-emerald-500 text-white ring-4 ring-white dark:ring-slate-800">
-              <ShieldCheck className="w-5 h-5" />
-            </span>
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex items-center space-x-2">
-              <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white">
-                {doctor.doctor_name}
-              </h1>
-              <span className="px-3 py-1 rounded-full text-xs font-bold bg-sky-100 dark:bg-sky-950 text-sky-700 dark:text-sky-300">
-                {doctor.specialization_name}
+      {/* --- DOCTOR PROFILE HERO BANNER --- */}
+      <div className="glass-card rounded-3xl p-8 border border-slate-200/80 dark:border-white/10 relative overflow-hidden">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          
+          <div className="flex items-center space-x-6">
+            <div className="relative">
+              <img
+                src={doctor.profile_image || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=400'}
+                alt={doctor.doctor_name}
+                className="w-28 h-28 rounded-3xl object-cover ring-4 ring-emerald-500/20 shadow-xl"
+              />
+              <span className="absolute -bottom-2 -right-2 p-1.5 rounded-full bg-emerald-500 text-slate-950 ring-4 ring-white dark:ring-slate-900" title="Verified Practitioner">
+                <ShieldCheck className="w-5 h-5" />
               </span>
             </div>
 
-            <p className="text-sm font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-2">
-              <Award className="w-4 h-4 text-sky-500" />
-              <span>{doctor.qualifications}</span>
-              <span>•</span>
-              <span className="text-emerald-600 font-bold">{doctor.experience} Years Experience</span>
-            </p>
-
-            <div className="flex items-center space-x-4 text-xs text-slate-500 dark:text-slate-400 pt-1">
-              <div className="flex items-center space-x-1">
-                <Building2 className="w-4 h-4 text-indigo-500" />
-                <span>{doctor.hospital}</span>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/50 dark:border-emerald-800/40 inline-flex items-center gap-1">
+                  <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
+                  {doctor.specialization_name}
+                </span>
+                <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                  {doctor.qualifications || 'MBBS, MD'}
+                </span>
               </div>
-              <div className="flex items-center space-x-1">
-                <MapPin className="w-4 h-4 text-rose-500" />
-                <span>{doctor.location}, {doctor.state || 'Tamil Nadu'}</span>
-              </div>
-            </div>
 
-            <div className="pt-2 flex items-center space-x-3">
-              <StarRating rating={doctor.rating || 4.8} size="md" />
-              <span className="text-xs text-slate-400">({doctor.reviews?.length || 0} Verified Reviews)</span>
+              <h1 className="font-heading font-extrabold text-3xl sm:text-4xl text-slate-900 dark:text-white">
+                {doctor.doctor_name}
+              </h1>
+
+              <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-slate-600 dark:text-slate-300">
+                <div className="flex items-center space-x-1.5">
+                  <Building2 className="w-4 h-4 text-teal-500" />
+                  <span>{doctor.hospital || 'Specialty Clinic'}</span>
+                </div>
+                <div className="flex items-center space-x-1.5">
+                  <MapPin className="w-4 h-4 text-rose-500" />
+                  <span>{doctor.location}, {doctor.state || 'Tamil Nadu'}</span>
+                </div>
+                <div className="flex items-center space-x-1.5">
+                  <Globe className="w-4 h-4 text-sky-500" />
+                  <span>{doctor.languages || 'Tamil, English'}</span>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Consultation Fee Card */}
-        <div className="w-full md:w-auto bg-slate-50 dark:bg-slate-900/60 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-700 text-center space-y-1">
-          <p className="text-xs font-bold uppercase text-slate-400 tracking-wider">Consultation Fee</p>
-          <p className="text-3xl font-extrabold text-emerald-600 dark:text-emerald-400">₹{doctor.consultation_fee}</p>
-          <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">Includes OPD & Consultation</p>
-        </div>
+          {/* Rating & Fee Box */}
+          <div className="flex flex-col items-start md:items-end space-y-2 bg-slate-50 dark:bg-slate-900/60 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shrink-0">
+            <StarRating rating={doctor.rating || 4.8} size="md" />
+            <div className="flex items-baseline font-bold text-slate-900 dark:text-white pt-1">
+              <span className="text-2xl text-emerald-600 dark:text-emerald-400">₹{doctor.consultation_fee}</span>
+              <span className="text-xs font-medium text-slate-400 ml-1">/ Consultation</span>
+            </div>
+            <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-100/60 dark:bg-emerald-950/60 px-2.5 py-0.5 rounded-full">
+              Instant Appointment Guarantee
+            </span>
+          </div>
 
+        </div>
       </div>
 
-      {/* Main Grid: Doctor Profile & Reviews vs Interactive Booking Form */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+
+      {/* --- CONTENT LAYOUT: DETAILS vs STICKY BOOKING PANEL --- */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
         
-        {/* Left Column: Doctor Bio, Languages, Availability, & Reviews */}
+        {/* LEFT COLUMN: About, Schedule & Reviews (7 cols) */}
         <div className="lg:col-span-7 space-y-8">
           
-          {/* About Doctor */}
-          <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 border border-slate-200/80 dark:border-slate-700 shadow-sm space-y-3">
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white">About Doctor</h3>
-            <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-              {doctor.about || 'Dedicated specialist providing comprehensive patient care and medical consultations.'}
+          {/* About Section */}
+          <div className="glass-card rounded-3xl p-6 border border-slate-200/80 dark:border-white/10 space-y-3">
+            <h3 className="font-heading font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
+              <User className="w-5 h-5 text-emerald-500" />
+              <span>About {doctor.doctor_name}</span>
+            </h3>
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
+              {doctor.about || `${doctor.doctor_name} is a senior medical specialist with over ${doctor.experience} years of clinical experience in ${doctor.specialization_name}. Affiliated with top medical institutions, providing expert diagnosis and personalized patient care.`}
             </p>
-            
-            <div className="pt-3 flex items-center space-x-2 text-xs font-semibold text-slate-500 border-t border-slate-100 dark:border-slate-700">
-              <Globe className="w-4 h-4 text-sky-500" />
-              <span>Languages Spoken: <strong className="text-slate-900 dark:text-white">{doctor.languages || 'English'}</strong></span>
+
+            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-100 dark:border-slate-800 text-xs font-semibold">
+              <div>
+                <span className="text-slate-400 block text-[11px]">Clinical Experience</span>
+                <span className="text-slate-900 dark:text-white text-sm font-bold">{doctor.experience}+ Years Active</span>
+              </div>
+              <div>
+                <span className="text-slate-400 block text-[11px]">Verification Status</span>
+                <span className="text-emerald-600 dark:text-emerald-400 text-sm font-bold capitalize">{doctor.verification_status || 'Approved'}</span>
+              </div>
             </div>
           </div>
 
-          {/* Working Days & Schedule */}
-          <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 border border-slate-200/80 dark:border-slate-700 shadow-sm space-y-4">
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center space-x-2">
-              <Clock className="w-5 h-5 text-indigo-500" />
-              <span>Working Hours & Schedule</span>
+          {/* Working Schedule Table */}
+          <div className="glass-card rounded-3xl p-6 border border-slate-200/80 dark:border-white/10 space-y-4">
+            <h3 className="font-heading font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
+              <Clock className="w-5 h-5 text-emerald-500" />
+              <span>Weekly Consultation Schedule</span>
             </h3>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {doctor.availability && doctor.availability.length > 0 ? (
-                doctor.availability.map((avail) => (
-                  <div key={avail.availability_id} className="p-3 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-800 text-xs flex justify-between items-center">
+            {doctor.availability && doctor.availability.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {doctor.availability.map((avail) => (
+                  <div key={avail.availability_id || avail._id} className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
                     <span className="font-bold text-slate-900 dark:text-white">{avail.day}</span>
-                    <span className="text-sky-600 dark:text-sky-400 font-semibold">{avail.start_time} - {avail.end_time}</span>
+                    <span className="font-semibold text-emerald-600 dark:text-emerald-400">{avail.start_time} - {avail.end_time}</span>
                   </div>
-                ))
-              ) : (
-                <p className="text-xs text-slate-400 col-span-2">Monday to Friday: 09:00 AM - 05:00 PM</p>
-              )}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-slate-400 font-medium">Monday to Saturday: 09:00 AM - 05:00 PM</p>
+            )}
           </div>
 
-          {/* Patient Reviews Section */}
-          <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 border border-slate-200/80 dark:border-slate-700 shadow-sm space-y-6">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-700">
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center space-x-2">
-                <MessageSquare className="w-5 h-5 text-amber-500" />
-                <span>Patient Reviews ({doctor.reviews?.length || 0})</span>
+          {/* Patient Reviews */}
+          <div className="glass-card rounded-3xl p-6 border border-slate-200/80 dark:border-white/10 space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="font-heading font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
+                <MessageSquare className="w-5 h-5 text-emerald-500" />
+                <span>Patient Feedback & Reviews ({doctor.reviews?.length || 0})</span>
               </h3>
               <StarRating rating={doctor.rating || 4.8} size="sm" />
             </div>
@@ -240,173 +257,195 @@ export default function DoctorDetails() {
             {doctor.reviews && doctor.reviews.length > 0 ? (
               <div className="space-y-4">
                 {doctor.reviews.map((rev) => (
-                  <div key={rev.review_id} className="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-2">
+                  <div key={rev.review_id} className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800 space-y-2 text-xs">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2.5">
                         <img
                           src={rev.patient_image || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=400'}
                           alt={rev.patient_name}
-                          className="w-8 h-8 rounded-full object-cover"
+                          className="w-7 h-7 rounded-full object-cover"
                         />
-                        <span className="font-bold text-xs text-slate-900 dark:text-white">{rev.patient_name}</span>
+                        <span className="font-bold text-slate-900 dark:text-white">{rev.patient_name}</span>
                       </div>
-                      <StarRating rating={rev.rating} size="xs" showNumeric={false} />
+                      <StarRating rating={rev.rating} size="xs" showNumber={false} />
                     </div>
-                    <p className="text-xs text-slate-600 dark:text-slate-300 italic">{rev.comment}</p>
-                    <p className="text-[10px] text-slate-400 text-right">{new Date(rev.created_at).toLocaleDateString()}</p>
+                    <p className="text-slate-600 dark:text-slate-300 font-medium">{rev.comment}</p>
+                    <span className="text-[10px] text-slate-400 block pt-1">{new Date(rev.created_at).toLocaleDateString()}</span>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-slate-400 text-center py-6">No patient reviews yet. Be the first to review after your consultation!</p>
+              <p className="text-xs text-slate-400 font-medium text-center py-4">No reviews posted yet. Be the first patient to review after your appointment!</p>
             )}
           </div>
 
         </div>
 
-        {/* Right Column: APPOINTMENT BOOKING WORKFLOW */}
-        <div className="lg:col-span-5 sticky top-24">
-          <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 border-2 border-sky-500/40 dark:border-sky-500/30 shadow-xl space-y-6">
+
+        {/* RIGHT COLUMN: STICKY BOOKING PANEL (5 cols) */}
+        <div className="lg:col-span-5 sticky top-28">
+          
+          <div className="glass-card rounded-3xl p-6 border border-slate-200/80 dark:border-white/10 shadow-2xl space-y-6">
             
-            <div className="border-b border-slate-100 dark:border-slate-700 pb-4">
-              <h3 className="text-xl font-extrabold text-slate-900 dark:text-white flex items-center space-x-2">
-                <Calendar className="w-6 h-6 text-sky-600 dark:text-sky-400" />
-                <span>Book Appointment</span>
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Select date & available time slot</p>
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+              <div>
+                <h3 className="font-heading font-extrabold text-lg text-slate-900 dark:text-white">Book Appointment</h3>
+                <p className="text-xs text-slate-500 font-medium">Select date & live time slot</p>
+              </div>
+              <div className="text-right">
+                <span className="text-xl font-extrabold text-emerald-600 dark:text-emerald-400">₹{doctor.consultation_fee}</span>
+                <span className="text-[10px] text-slate-400 block font-medium">Inclusive of taxes</span>
+              </div>
             </div>
 
-            {bookingSuccess ? (
-              <div className="p-6 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 rounded-2xl text-center space-y-4">
-                <div className="w-12 h-12 rounded-full bg-emerald-500 text-white flex items-center justify-center mx-auto shadow-md">
-                  <CheckCircle2 className="w-7 h-7" />
-                </div>
-                <h4 className="font-bold text-lg text-emerald-900 dark:text-emerald-200">Appointment Requested!</h4>
-                <p className="text-xs text-emerald-800 dark:text-emerald-300 leading-relaxed">
-                  Your appointment request for <strong className="underline">{selectedDate}</strong> at <strong className="underline">{selectedTime}</strong> has been submitted to {doctor.doctor_name}.
-                </p>
-                <div className="pt-2 flex flex-col space-y-2">
-                  <button
-                    onClick={() => navigate('/patient/dashboard')}
-                    className="w-full py-2.5 bg-emerald-600 text-white font-bold text-xs rounded-xl shadow hover:bg-emerald-700 transition-colors"
-                  >
-                    View My Appointments
-                  </button>
-                  <button
-                    onClick={() => setBookingSuccess(false)}
-                    className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 hover:underline"
-                  >
-                    Book Another Slot
-                  </button>
-                </div>
+            {errorMessage && (
+              <div className="p-3.5 bg-rose-50 dark:bg-rose-950/60 rounded-2xl border border-rose-200 text-rose-700 dark:text-rose-300 text-xs font-semibold flex items-center space-x-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{errorMessage}</span>
               </div>
-            ) : (
-              <form onSubmit={handleBookAppointment} className="space-y-5">
-                
-                {errorMessage && (
-                  <div className="p-3 bg-rose-50 dark:bg-rose-950/60 border border-rose-200 text-rose-700 dark:text-rose-300 rounded-xl text-xs flex items-start space-x-2">
-                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                    <span>{errorMessage}</span>
-                  </div>
-                )}
-
-                {/* 1. Date Picker */}
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
-                    1. Select Date
-                  </label>
-                  <input
-                    type="date"
-                    min={todayStr}
-                    value={selectedDate}
-                    onChange={(e) => setSelectedDate(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-sky-500"
-                  />
-                </div>
-
-                {/* 2. Live Time Slots */}
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                      2. Available Time Slots ({slotsInfo.day || ''})
-                    </label>
-                    {slotsInfo.available && (
-                      <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">● Doctor Working</span>
-                    )}
-                  </div>
-
-                  {loadingSlots ? (
-                    <div className="py-6 text-center text-xs text-slate-400 animate-pulse">Checking slot availability...</div>
-                  ) : !slotsInfo.available ? (
-                    <div className="p-4 bg-amber-50 dark:bg-amber-950/50 rounded-xl border border-amber-200 text-amber-700 dark:text-amber-300 text-xs text-center font-medium">
-                      {slotsInfo.message || 'Doctor is not available on this date.'}
-                    </div>
-                  ) : slotsInfo.slots.length > 0 ? (
-                    <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto pr-1">
-                      {slotsInfo.slots.map((slot) => (
-                        <button
-                          key={slot.time}
-                          type="button"
-                          disabled={slot.isBooked}
-                          onClick={() => setSelectedTime(slot.time)}
-                          className={`py-2 px-1 rounded-xl text-xs font-bold border transition-all ${
-                            slot.isBooked
-                              ? 'bg-slate-100 text-slate-400 border-slate-200 dark:bg-slate-900/60 dark:border-slate-800 dark:text-slate-600 cursor-not-allowed line-through'
-                              : selectedTime === slot.time
-                              ? 'bg-sky-600 text-white border-sky-600 shadow-md shadow-sky-500/25 ring-2 ring-sky-400'
-                              : 'bg-slate-50 dark:bg-slate-900/50 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700 hover:border-sky-400'
-                          }`}
-                        >
-                          {slot.time}
-                        </button>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-xs text-slate-400 text-center py-4">No slots available for this date.</p>
-                  )}
-                </div>
-
-                {/* 3. Reason for Visit */}
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
-                    3. Reason for Appointment
-                  </label>
-                  <textarea
-                    rows="3"
-                    value={reason}
-                    onChange={(e) => setReason(e.target.value)}
-                    placeholder="Briefly describe your symptoms or consultation reason..."
-                    className="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-900 dark:text-white focus:outline-none focus:border-sky-500"
-                  ></textarea>
-                </div>
-
-                {/* Confirm Booking Button */}
-                <button
-                  type="submit"
-                  disabled={bookingLoading || !selectedTime || !slotsInfo.available}
-                  className="w-full py-3.5 bg-gradient-to-r from-sky-600 via-indigo-600 to-emerald-600 text-white font-extrabold text-sm rounded-xl shadow-lg shadow-sky-500/25 hover:opacity-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
-                >
-                  {bookingLoading ? (
-                    <span>Booking Appointment...</span>
-                  ) : (
-                    <>
-                      <span>Confirm & Book Appointment</span>
-                      <ChevronRight className="w-4 h-4" />
-                    </>
-                  )}
-                </button>
-
-                <p className="text-[10px] text-slate-400 text-center">
-                  🔒 Safe & confidential booking. Double booking is automatically prevented.
-                </p>
-
-              </form>
             )}
 
+            <form onSubmit={handleBookAppointment} className="space-y-5">
+              
+              {/* 1. SELECT DATE */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
+                  1. Select Consultation Date
+                </label>
+                <input
+                  type="date"
+                  min={todayStr}
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  className="w-full px-4 py-3 rounded-2xl bg-slate-100/70 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-700 text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+
+              {/* 2. LIVE TIME SLOTS */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                    2. Available Slots ({slotsInfo.day || ''})
+                  </label>
+                  {slotsInfo.available && (
+                    <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full">
+                      ● Doctor Working
+                    </span>
+                  )}
+                </div>
+
+                {loadingSlots ? (
+                  <div className="py-6 text-center text-xs text-slate-400 animate-pulse font-medium">Checking live slot availability...</div>
+                ) : !slotsInfo.available ? (
+                  <div className="p-4 bg-amber-50 dark:bg-amber-950/50 rounded-2xl border border-amber-200 text-amber-700 dark:text-amber-300 text-xs text-center font-semibold">
+                    {slotsInfo.message || 'Doctor is not available on this date.'}
+                  </div>
+                ) : slotsInfo.slots.length > 0 ? (
+                  <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto pr-1">
+                    {slotsInfo.slots.map((slot) => (
+                      <button
+                        key={slot.time}
+                        type="button"
+                        disabled={slot.isBooked}
+                        onClick={() => setSelectedTime(slot.time)}
+                        className={`py-2 px-1 rounded-xl text-xs font-bold border transition-all ${
+                          slot.isBooked
+                            ? 'bg-slate-100 text-slate-400 border-slate-200 dark:bg-slate-900/60 dark:border-slate-800 dark:text-slate-600 cursor-not-allowed line-through'
+                            : selectedTime === slot.time
+                            ? 'bg-emerald-500 text-slate-950 border-emerald-500 shadow-md ring-2 ring-emerald-400'
+                            : 'bg-slate-100/70 dark:bg-slate-900/50 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700 hover:border-emerald-500'
+                        }`}
+                      >
+                        {slot.time}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-400 text-center py-4 font-medium">No slots available for this date.</p>
+                )}
+              </div>
+
+              {/* 3. REASON FOR APPOINTMENT */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
+                  3. Consultation Reason
+                </label>
+                <textarea
+                  rows="3"
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  placeholder="Briefly describe your symptoms or consultation reason..."
+                  className="w-full px-4 py-3 rounded-2xl bg-slate-100/70 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-emerald-500"
+                ></textarea>
+              </div>
+
+              {/* CONFIRM BOOKING CTA */}
+              <button
+                type="submit"
+                disabled={bookingLoading}
+                className="w-full py-4 bg-slate-900 hover:bg-slate-800 dark:bg-emerald-500 dark:hover:bg-emerald-400 text-white dark:text-slate-950 rounded-2xl font-heading font-extrabold text-sm shadow-xl flex items-center justify-center space-x-2 transition-all"
+              >
+                {bookingLoading ? (
+                  <span>Processing Appointment...</span>
+                ) : (
+                  <>
+                    <span>Confirm & Book Visit</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+
+            </form>
+
           </div>
+
         </div>
 
       </div>
+
+
+      {/* --- SUCCESS MODAL POPUP --- */}
+      <AnimatePresence>
+        {bookingSuccess && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="glass-card max-w-md w-full rounded-3xl p-8 border border-white/20 text-center space-y-5"
+            >
+              <div className="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-500 flex items-center justify-center mx-auto">
+                <CheckCircle2 className="w-10 h-10 animate-bounce" />
+              </div>
+              <h3 className="font-heading font-extrabold text-2xl text-slate-900 dark:text-white">
+                Appointment Booked!
+              </h3>
+              <p className="text-xs text-slate-600 dark:text-slate-300 font-medium">
+                Your consultation request with <strong className="text-emerald-500">{doctor.doctor_name}</strong> for <strong>{selectedDate}</strong> at <strong>{selectedTime}</strong> has been submitted.
+              </p>
+
+              <div className="pt-4 flex flex-col gap-2">
+                <button
+                  onClick={() => navigate('/patient/dashboard')}
+                  className="w-full py-3 bg-slate-900 hover:bg-slate-800 dark:bg-emerald-500 dark:hover:bg-emerald-400 text-white dark:text-slate-950 font-bold text-xs rounded-2xl shadow-lg"
+                >
+                  Go to My Appointments
+                </button>
+                <button
+                  onClick={() => setBookingSuccess(false)}
+                  className="w-full py-3 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-2xl"
+                >
+                  Book Another Slot
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
     </div>
   );

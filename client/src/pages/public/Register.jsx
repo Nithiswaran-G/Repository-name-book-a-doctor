@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 import { doctorService } from '../../services/api';
-import { Stethoscope, User, Lock, Mail, Phone, MapPin, Award, Building2, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Stethoscope, User, Lock, Mail, Phone, MapPin, Award, Building2, AlertCircle, CheckCircle2, Sparkles, ArrowRight } from 'lucide-react';
 
 export default function Register() {
   const [searchParams] = useSearchParams();
@@ -34,7 +35,7 @@ export default function Register() {
   const [qualifications, setQualifications] = useState('');
   const [experience, setExperience] = useState('5');
   const [hospital, setHospital] = useState('');
-  const [location, setLocation] = useState('');
+  const [location, setLocation] = useState('Chennai');
   const [fee, setFee] = useState('650');
   const [about, setAbout] = useState('');
   const [languages, setLanguages] = useState('Tamil, English');
@@ -69,7 +70,8 @@ export default function Register() {
           medical_information: medicalInfo
         });
         if (data.success) {
-          navigate('/patient/dashboard');
+          setSuccessMessage('Registration successful! Redirecting to dashboard...');
+          setTimeout(() => navigate('/patient/dashboard'), 1200);
         }
       } else {
         const data = await registerDoctor({
@@ -82,44 +84,56 @@ export default function Register() {
           qualifications,
           experience,
           hospital,
-          location: location || address,
+          location,
           consultation_fee: fee,
           about,
           languages
         });
         if (data.success) {
-          setSuccessMessage('Doctor account submitted successfully! Your account is pending Admin approval.');
-          setTimeout(() => navigate('/doctor/dashboard'), 2000);
+          setSuccessMessage('Doctor application submitted! Redirecting to doctor portal...');
+          setTimeout(() => navigate('/doctor/dashboard'), 1500);
         }
       }
     } catch (err) {
-      setErrorMessage(err.response?.data?.message || 'Registration failed.');
+      setErrorMessage(err.response?.data?.message || 'Registration failed. Please check input details.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-[90vh] flex items-center justify-center px-4 py-12">
-      <div className="max-w-xl w-full bg-white dark:bg-slate-800 rounded-3xl p-8 border border-slate-200/80 dark:border-slate-700 shadow-2xl space-y-6">
+    <div className="min-h-[90vh] flex items-center justify-center px-4 py-12 relative overflow-hidden bg-radial-glow">
+      
+      <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="max-w-2xl w-full glass-card rounded-3xl p-8 border border-slate-200/80 dark:border-white/10 shadow-2xl space-y-6 relative z-10"
+      >
         
         {/* Header */}
         <div className="text-center space-y-2">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-sky-600 to-indigo-600 flex items-center justify-center text-white mx-auto shadow-md shadow-sky-500/20">
-            <Stethoscope className="w-7 h-7" />
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white mx-auto shadow-lg shadow-emerald-500/20">
+            <Stethoscope className="w-6 h-6" />
           </div>
-          <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white">Create Your Account</h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400">Join Book A Doctor platform today</p>
+          <h2 className="font-heading font-extrabold text-2xl text-slate-900 dark:text-white">
+            Create Your MediNova Account
+          </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+            Join India's premier healthcare and doctor appointment network
+          </p>
         </div>
 
-        {/* Role Toggle Tabs */}
-        <div className="grid grid-cols-2 p-1 bg-slate-100 dark:bg-slate-900 rounded-2xl">
+        {/* Role Switcher Pills */}
+        <div className="flex bg-slate-100/80 dark:bg-slate-900/60 p-1.5 rounded-2xl border border-slate-200/60 dark:border-white/5">
           <button
             type="button"
             onClick={() => setRole('patient')}
-            className={`py-2.5 rounded-xl font-bold text-xs transition-all ${
+            className={`flex-1 py-2.5 rounded-xl text-xs font-extrabold transition-all ${
               role === 'patient'
-                ? 'bg-white dark:bg-slate-800 text-sky-600 dark:text-sky-400 shadow-sm'
+                ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-md'
                 : 'text-slate-500 dark:text-slate-400 hover:text-slate-900'
             }`}
           >
@@ -128,9 +142,9 @@ export default function Register() {
           <button
             type="button"
             onClick={() => setRole('doctor')}
-            className={`py-2.5 rounded-xl font-bold text-xs transition-all ${
+            className={`flex-1 py-2.5 rounded-xl text-xs font-extrabold transition-all ${
               role === 'doctor'
-                ? 'bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shadow-sm'
+                ? 'bg-slate-900 dark:bg-emerald-500 text-white dark:text-slate-950 shadow-md'
                 : 'text-slate-500 dark:text-slate-400 hover:text-slate-900'
             }`}
           >
@@ -139,200 +153,247 @@ export default function Register() {
         </div>
 
         {errorMessage && (
-          <div className="p-3 bg-rose-50 dark:bg-rose-950/60 border border-rose-200 text-rose-700 dark:text-rose-300 rounded-xl text-xs flex items-center space-x-2">
+          <div className="p-3.5 bg-rose-50 dark:bg-rose-950/60 border border-rose-200 text-rose-700 dark:text-rose-300 rounded-2xl text-xs font-semibold flex items-center space-x-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{errorMessage}</span>
           </div>
         )}
 
         {successMessage && (
-          <div className="p-3 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 text-emerald-700 dark:text-emerald-300 rounded-xl text-xs flex items-center space-x-2">
-            <CheckCircle2 className="w-4 h-4 shrink-0" />
+          <div className="p-3.5 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 text-emerald-700 dark:text-emerald-300 rounded-2xl text-xs font-semibold flex items-center space-x-2">
+            <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-500" />
             <span>{successMessage}</span>
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           
-          {/* Common Details */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Common Fields Row 1 */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Full Name</label>
-              <input
-                type="text"
-                required
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder={role === 'doctor' ? 'Dr. John Doe' : 'John Doe'}
-                className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-900 dark:text-white"
-              />
+              <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                Full Name
+              </label>
+              <div className="relative flex items-center">
+                <User className="w-4 h-4 text-emerald-500 absolute left-3.5" />
+                <input
+                  type="text"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder={role === 'doctor' ? 'Dr. Rajesh Sundaram' : 'John Doe'}
+                  className="w-full pl-10 pr-3 py-3 rounded-2xl bg-slate-100/70 dark:bg-slate-900/70 border border-transparent focus:border-emerald-500 text-xs font-semibold text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none"
+                />
+              </div>
             </div>
+
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Email Address</label>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="email@example.com"
-                className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-900 dark:text-white"
-              />
+              <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                Email Address
+              </label>
+              <div className="relative flex items-center">
+                <Mail className="w-4 h-4 text-emerald-500 absolute left-3.5" />
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="name@example.com"
+                  className="w-full pl-10 pr-3 py-3 rounded-2xl bg-slate-100/70 dark:bg-slate-900/70 border border-transparent focus:border-emerald-500 text-xs font-semibold text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none"
+                />
+              </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Common Fields Row 2 */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Password</label>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-900 dark:text-white"
-              />
+              <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                Password
+              </label>
+              <div className="relative flex items-center">
+                <Lock className="w-4 h-4 text-emerald-500 absolute left-3.5" />
+                <input
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full pl-10 pr-3 py-3 rounded-2xl bg-slate-100/70 dark:bg-slate-900/70 border border-transparent focus:border-emerald-500 text-xs font-semibold text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none"
+                />
+              </div>
             </div>
+
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Phone Number</label>
-              <input
-                type="text"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="+1-555-0199"
-                className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-900 dark:text-white"
-              />
+              <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                Phone Number
+              </label>
+              <div className="relative flex items-center">
+                <Phone className="w-4 h-4 text-emerald-500 absolute left-3.5" />
+                <input
+                  type="text"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="+91 9876543210"
+                  className="w-full pl-10 pr-3 py-3 rounded-2xl bg-slate-100/70 dark:bg-slate-900/70 border border-transparent focus:border-emerald-500 text-xs font-semibold text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none"
+                />
+              </div>
             </div>
           </div>
 
-          {/* PATIENT SPECIFIC FIELDS */}
-          {role === 'patient' && (
-            <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Doctor Specific Fields */}
+          {role === 'doctor' ? (
+            <div className="space-y-4 pt-2 border-t border-slate-100 dark:border-slate-800">
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Date of Birth</label>
-                  <input
-                    type="date"
-                    value={dob}
-                    onChange={(e) => setDob(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-900 dark:text-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Gender</label>
-                  <select
-                    value={gender}
-                    onChange={(e) => setGender(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-900 dark:text-white"
-                  >
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Other">Other</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Medical Info / History</label>
-                <textarea
-                  rows="2"
-                  value={medicalInfo}
-                  onChange={(e) => setMedicalInfo(e.target.value)}
-                  placeholder="Known allergies, chronic conditions, etc..."
-                  className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-900 dark:text-white"
-                ></textarea>
-              </div>
-            </>
-          )}
-
-          {/* DOCTOR SPECIFIC FIELDS */}
-          {role === 'doctor' && (
-            <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Specialization</label>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                    Medical Specialization
+                  </label>
                   <select
                     value={specId}
                     onChange={(e) => setSpecId(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-900 dark:text-white"
+                    className="w-full px-3 py-3 rounded-2xl bg-slate-100/70 dark:bg-slate-900/70 border border-transparent focus:border-emerald-500 text-xs font-semibold text-slate-900 dark:text-white focus:outline-none cursor-pointer"
                   >
-                    {specializations.map((s) => (
-                      <option key={s.specialization_id} value={s.specialization_id}>
-                        {s.specialization_name}
+                    {specializations.map((spec) => (
+                      <option key={spec.specialization_id} value={spec.specialization_id}>
+                        {spec.specialization_name}
                       </option>
                     ))}
                   </select>
                 </div>
+
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Qualifications</label>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                    Qualifications
+                  </label>
                   <input
                     type="text"
+                    required
                     value={qualifications}
                     onChange={(e) => setQualifications(e.target.value)}
-                    placeholder="e.g., MD, FACC - Harvard Medical"
-                    className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-900 dark:text-white"
+                    placeholder="MBBS, MD (Cardiology)"
+                    className="w-full px-3.5 py-3 rounded-2xl bg-slate-100/70 dark:bg-slate-900/70 border border-transparent focus:border-emerald-500 text-xs font-semibold text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Experience (Yrs)</label>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                    Experience (Years)
+                  </label>
                   <input
                     type="number"
+                    required
                     value={experience}
                     onChange={(e) => setExperience(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-900 dark:text-white"
+                    className="w-full px-3.5 py-3 rounded-2xl bg-slate-100/70 dark:bg-slate-900/70 border border-transparent focus:border-emerald-500 text-xs font-semibold text-slate-900 dark:text-white focus:outline-none"
                   />
                 </div>
+
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Consultation Fee (₹)</label>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                    Consultation Fee (₹)
+                  </label>
                   <input
                     type="number"
-                    min="500"
-                    max="1000"
+                    required
                     value={fee}
                     onChange={(e) => setFee(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-900 dark:text-white"
+                    className="w-full px-3.5 py-3 rounded-2xl bg-slate-100/70 dark:bg-slate-900/70 border border-transparent focus:border-emerald-500 text-xs font-semibold text-slate-900 dark:text-white focus:outline-none"
                   />
                 </div>
+
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Hospital / Clinic</label>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                    District / City
+                  </label>
                   <input
                     type="text"
-                    value={hospital}
-                    onChange={(e) => setHospital(e.target.value)}
-                    placeholder="Hospital Name"
-                    className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-900 dark:text-white"
+                    required
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                    placeholder="Chennai"
+                    className="w-full px-3.5 py-3 rounded-2xl bg-slate-100/70 dark:bg-slate-900/70 border border-transparent focus:border-emerald-500 text-xs font-semibold text-slate-900 dark:text-white focus:outline-none"
                   />
                 </div>
               </div>
 
-              <p className="text-[11px] text-amber-600 dark:text-amber-400 font-semibold bg-amber-50 dark:bg-amber-950/40 p-2.5 rounded-xl border border-amber-200/60">
-                ⚠️ Doctor registrations require Administrator approval before appearing in public doctor listings.
-              </p>
-            </>
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                  Hospital / Clinic Name
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={hospital}
+                  onChange={(e) => setHospital(e.target.value)}
+                  placeholder="Apollo Specialty Hospital"
+                  className="w-full px-3.5 py-3 rounded-2xl bg-slate-100/70 dark:bg-slate-900/70 border border-transparent focus:border-emerald-500 text-xs font-semibold text-slate-900 dark:text-white focus:outline-none"
+                />
+              </div>
+
+            </div>
+          ) : (
+            /* Patient Specific Fields */
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-slate-100 dark:border-slate-800">
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                  Date of Birth
+                </label>
+                <input
+                  type="date"
+                  value={dob}
+                  onChange={(e) => setDob(e.target.value)}
+                  className="w-full px-3.5 py-3 rounded-2xl bg-slate-100/70 dark:bg-slate-900/70 border border-transparent focus:border-emerald-500 text-xs font-semibold text-slate-900 dark:text-white focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                  Gender
+                </label>
+                <select
+                  value={gender}
+                  onChange={(e) => setGender(e.target.value)}
+                  className="w-full px-3 py-3 rounded-2xl bg-slate-100/70 dark:bg-slate-900/70 border border-transparent focus:border-emerald-500 text-xs font-semibold text-slate-900 dark:text-white focus:outline-none cursor-pointer"
+                >
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+            </div>
           )}
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3.5 bg-gradient-to-r from-sky-600 to-indigo-600 text-white font-extrabold text-sm rounded-xl shadow-lg shadow-sky-500/25 hover:opacity-95 transition-opacity disabled:opacity-50"
+            className="w-full py-4 bg-slate-900 hover:bg-slate-800 dark:bg-emerald-500 dark:hover:bg-emerald-400 text-white dark:text-slate-950 font-heading font-extrabold text-sm rounded-2xl shadow-xl flex items-center justify-center space-x-2 transition-all disabled:opacity-50 mt-4"
           >
-            {loading ? 'Creating Account...' : `Register as ${role === 'doctor' ? 'Doctor' : 'Patient'}`}
+            {loading ? (
+              <span>Creating MediNova Account...</span>
+            ) : (
+              <>
+                <span>Complete Registration</span>
+                <ArrowRight className="w-4 h-4" />
+              </>
+            )}
           </button>
 
         </form>
 
-        <div className="text-center pt-2">
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+        <div className="text-center pt-2 border-t border-slate-100 dark:border-slate-800">
+          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
             Already registered?{' '}
-            <Link to="/login" className="font-bold text-sky-600 dark:text-sky-400 hover:underline">
-              Log In
+            <Link to="/login" className="font-bold text-emerald-600 dark:text-emerald-400 hover:underline">
+              Sign In Here
             </Link>
           </p>
         </div>
 
-      </div>
+      </motion.div>
     </div>
   );
 }
