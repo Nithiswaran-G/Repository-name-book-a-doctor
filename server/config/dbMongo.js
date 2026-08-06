@@ -3,14 +3,14 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 export async function connectMongo() {
-  const mongoUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/book_a_doctor';
+  const mongoUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/book-a-doc';
 
   try {
     console.log(`📡 Connecting to MongoDB (${mongoUri.includes('@') ? 'Cloud MongoDB Atlas' : mongoUri})...`);
     await mongoose.connect(mongoUri, {
       serverSelectionTimeoutMS: 4000
     });
-    console.log(`✅ MongoDB Connected Successfully!`);
+    console.log(`✅ MongoDB Connected Successfully to database: ${mongoose.connection.name}`);
   } catch (err) {
     console.warn(`⚠️ External MongoDB connection failed (${err.message}). Starting Fallback Memory MongoDB Server...`);
     try {
