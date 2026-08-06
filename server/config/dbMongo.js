@@ -1,6 +1,12 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
+import dns from 'dns';
 dotenv.config();
+
+// Ensure Node uses Google Public DNS to resolve MongoDB Atlas SRV records reliably on Windows
+try {
+  dns.setServers(['8.8.8.8', '1.1.1.1']);
+} catch (e) {}
 
 export async function connectMongo() {
   const mongoUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/book-a-doc';
@@ -8,7 +14,7 @@ export async function connectMongo() {
   try {
     console.log(`📡 Connecting to MongoDB (${mongoUri.includes('@') ? 'Cloud MongoDB Atlas' : mongoUri})...`);
     await mongoose.connect(mongoUri, {
-      serverSelectionTimeoutMS: 4000
+      serverSelectionTimeoutMS: 10000
     });
     console.log(`✅ MongoDB Connected Successfully to database: ${mongoose.connection.name}`);
   } catch (err) {
