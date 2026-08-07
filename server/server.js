@@ -26,6 +26,21 @@ connectMongo().then(() => {
   seedMongoDatabase();
 }).catch(console.error);
 
+// Root Welcome Endpoint
+app.get('/', (req, res) => {
+  res.json({
+    status: 'ok',
+    app: 'MediNova - Book A Doctor MERN API Server',
+    database: 'MongoDB Atlas Cloud (book-a-doc)',
+    endpoints: {
+      health: '/api/health',
+      doctors: '/api/doctors',
+      specializations: '/api/doctors/specializations',
+      auth_login: '/api/auth/login'
+    }
+  });
+});
+
 // Register API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/doctors', doctorRoutes);
