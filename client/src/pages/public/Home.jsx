@@ -25,7 +25,8 @@ import {
   ChevronDown,
   Building2,
   PhoneCall,
-  Zap
+  Zap,
+  Star
 } from 'lucide-react';
 
 export default function Home() {
@@ -214,14 +215,17 @@ export default function Home() {
                 <motion.div
                   animate={{ y: [0, -6, 0] }}
                   transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-                  className="absolute -top-6 -left-6 z-30 glass-panel rounded-2xl p-3.5 shadow-xl border border-white/40 dark:border-white/10 flex items-center space-x-3"
+                  className="absolute -top-8 -left-4 sm:-left-8 z-30 glass-panel rounded-2xl px-4 py-3 shadow-2xl border border-white/40 dark:border-white/10 flex items-center space-x-3 backdrop-blur-xl"
                 >
-                  <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500">
-                    <StarRating rating={5.0} size="sm" />
+                  <div className="w-10 h-10 rounded-xl bg-amber-500/15 flex items-center justify-center text-amber-400 shrink-0">
+                    <Star className="w-5 h-5 fill-amber-400 text-amber-400" />
                   </div>
                   <div>
-                    <p className="font-heading font-extrabold text-sm text-slate-900 dark:text-white">4.9 / 5.0 Rating</p>
-                    <p className="text-[10px] text-slate-500 font-semibold">12,500+ Verified Patient Reviews</p>
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-heading font-extrabold text-sm text-slate-900 dark:text-white">4.9 / 5.0</span>
+                      <StarRating rating={5.0} size="xs" showNumeric={false} />
+                    </div>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold whitespace-nowrap">12,500+ Verified Patient Reviews</p>
                   </div>
                 </motion.div>
 
@@ -229,14 +233,14 @@ export default function Home() {
                 <motion.div
                   animate={{ y: [0, 6, 0] }}
                   transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
-                  className="absolute -bottom-6 -right-6 z-30 glass-panel rounded-2xl p-3.5 shadow-xl border border-white/40 dark:border-white/10 flex items-center space-x-3"
+                  className="absolute -bottom-8 -right-4 sm:-right-8 z-30 glass-panel rounded-2xl px-4 py-3 shadow-2xl border border-white/40 dark:border-white/10 flex items-center space-x-3 backdrop-blur-xl"
                 >
-                  <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500">
-                    <Zap className="w-5 h-5 animate-bounce" />
+                  <div className="w-10 h-10 rounded-xl bg-emerald-500/15 flex items-center justify-center text-emerald-400 shrink-0">
+                    <Zap className="w-5 h-5 text-emerald-400" />
                   </div>
                   <div>
-                    <p className="font-heading font-bold text-xs text-slate-900 dark:text-white">Instant Booking Guarantee</p>
-                    <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">Zero Waiting Time at Clinic</p>
+                    <p className="font-heading font-extrabold text-xs text-slate-900 dark:text-white whitespace-nowrap">Instant Booking Guarantee</p>
+                    <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold whitespace-nowrap">Zero Waiting Queue</p>
                   </div>
                 </motion.div>
 
